@@ -24,8 +24,8 @@ jobs:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
     - name: Build the Docker image
       run: |
-        docker build --pull . -f Dockerfile -t pairdrop
-        docker save my-app:${{ github.sha }} -o my-app.tar
+        docker build --pull . -f Dockerfile -t mypairdrop
+        docker save mypairdrop -o mypairdrop.tar
         
     - name: Upload Docker image as artifact
       uses: actions/upload-artifact@v4
