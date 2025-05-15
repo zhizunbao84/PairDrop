@@ -21,15 +21,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-    - name: Build the Docker image
-      run: |
-        docker build --pull . -f Dockerfile -t mypairdrop
-        docker save mypairdrop -o mypairdrop.tar
-        
-    - name: Upload Docker image as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: docker-image-tar
-        path: mypairdrop.tar
-
+  
+      - name: Checkout repository
+        uses: actions/checkout@v4
+  
+      # 设置 QEMU 模拟器以支持 ARM64 构建
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+  
+      # 设置 Docker Buildx 构建工具
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
+  
+      # 构建 ARM64 镜像并加载到本地 Docker
+      - name: Build ARM64 image from Dockerfile
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile  # 指定 Dockerfile 路径
+          platforms: linux/arm64
+          load: true  # 将镜像加载到本地 Docker
+          tags: mypaidrop:arm64
+  
+      # 将镜像保存为 tar 文件
+      - name: Save Docker image as tar
+        run: |
+          docker save mypaidrop:arm64 -o mypaidrop-arm64.tar
+          echo "Tar file size: $(du -h mypaidrop-arm64.tar | cut -f1)"
+  
+      # 上传 tar 文件作为构建产物
+      - name: Upload Docker image tar
+        uses: actions/upload-artifact@v4
+        with:
+          name: mypaidrop-arm64-image
+          path: mypaidrop-arm64.tar
+          retention-days: 7
